@@ -1,0 +1,99 @@
+relative_abundance:
+  table_name: relative_abundance
+  description: 'MetaPhlAn: relative_abundance (metaphlan_unknown_list.tsv.gz)'
+  input_path_suffix: /metaphlan_lists/metaphlan_unknown_list.tsv.gz
+  columns:
+    clade_name: VARCHAR
+    NCBI_tax_id: VARCHAR
+    relative_abundance: DOUBLE
+    additional_species: VARCHAR
+  header:
+    db_version: 1
+    command: 2
+    reads_processed: 3
+    metaphlan_header: 4
+    original_columns: 5
+  columns_to_split:
+    clade_name:
+      delimiter: '[|]'
+      parts:
+        clade_name_kingdom: 1
+        clade_name_phylum: 2
+        clade_name_class: 3
+        clade_name_order: 4
+        clade_name_family: 5
+        clade_name_genus: 6
+        clade_name_species: 7
+        clade_name_terminal: 8
+    NCBI_tax_id:
+      delimiter: '[|]'
+      parts:
+        NCBI_tax_id_kingdom: 1
+        NCBI_tax_id_phylum: 2
+        NCBI_tax_id_class: 3
+        NCBI_tax_id_order: 4
+        NCBI_tax_id_family: 5
+        NCBI_tax_id_genus: 6
+        NCBI_tax_id_species: 7
+        NCBI_tax_id_terminal: 8
+  columns_to_sort:
+    - uuid
+    - clade_name_species
+
+viral_clusters:
+  table_name: viral_clusters
+  description: 'MetaPhlAn: viral_clusters (metaphlan_viruses_list.tsv.gz)'
+  input_path_suffix: /metaphlan_lists/metaphlan_viruses_list.tsv.gz
+  columns:
+    m_group_cluster: VARCHAR
+    genome_name: VARCHAR
+    length: INTEGER
+    breadth_of_coverage: DOUBLE
+    depth_of_coverage_mean: DOUBLE
+    depth_of_coverage_median: DOUBLE
+    m_group_type_k_u: VARCHAR
+    first_genome_in_cluster: VARCHAR
+    other_genomes: VARCHAR
+  header:
+    db_version: 1
+    command: 2
+    metaphlan_header: 3
+    original_columns: 4
+  columns_to_split:
+  columns_to_sort:
+    - uuid
+    - genome_name
+
+marker_abundance:
+  table_name: marker_abundance
+  description: 'MetaPhlAn: marker_abundance (marker_abundance.tsv.gz)'
+  input_path_suffix: /metaphlan_markers/marker_abundance.tsv.gz
+  columns:
+    uniref: VARCHAR
+    abundance: DOUBLE
+  header:
+    db_version: 1
+    command: 2
+    reads_processed: 3
+    metaphlan_header: 4
+  columns_to_split:
+  columns_to_sort:
+    - uuid
+    - uniref
+
+marker_presence:
+  table_name: marker_presence
+  description: 'MetaPhlAn: marker_presence (marker_presence.tsv.gz)'
+  input_path_suffix: /metaphlan_markers/marker_presence.tsv.gz
+  columns:
+    uniref: VARCHAR
+    presence: INTEGER
+  header:
+    db_version: 1
+    command: 2
+    reads_processed: 3
+    metaphlan_header: 4
+  columns_to_split:
+  columns_to_sort:
+    - uuid
+    - uniref
