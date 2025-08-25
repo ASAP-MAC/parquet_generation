@@ -1,4 +1,4 @@
--- Usage: duckdb goose.duckdb < humann_examples.sql
+-- Usage: duckdb goose.duckdb < humann_all.sql
 install httpfs;
 load httpfs;
 CREATE SECRET metagenomics_mac (
@@ -7,18 +7,8 @@ CREATE SECRET metagenomics_mac (
     SECRET 'SECRET'
 );
 
-SET VARIABLE test_ids = list_value(
-        'd9cc81ea-c39e-46a6-a6f9-eb5584b87706',
-        '38d449c8-1462-4d30-ba87-d032d95942ce',
-        '5f8d4254-7653-46e3-814e-ed72cdfcb4d0',
-        '0a73759e-825f-4276-9348-66fb6a6e2f86',
-        '8793b1dc-3ba1-4591-82b8-4297adcfa1d7',
-        '6821bf5f-ad59-4204-9d78-9cf9cac97329',
-        '8eb9f7ae-88c2-44e5-967e-fe7f6090c7af',
-        'cc1f30a0-45d9-41b1-b592-7d0892919ee7',
-        '4985aa08-6138-4146-8ae3-952716575395',
-        'fb7e8210-002a-4554-b265-873c4003e25f');
-SET VARIABLE test_prefixes = list_transform(getvariable('test_ids'), lambda x : concat('gs://metagenomics-mac/results/cMDv4/', x));
+-- Wildcard mode: read all matching files
+SET VARIABLE test_prefixes = list_value('gs://metagenomics-mac/results/cMDv4/*');
 
 -- Loop over data types:
 
@@ -69,12 +59,12 @@ INNER JOIN genefamilies_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -131,12 +121,12 @@ INNER JOIN genefamilies_cpm_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_cpm_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_cpm_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -193,12 +183,12 @@ INNER JOIN genefamilies_cpm_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_cpm_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_cpm_stratified_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_stratified_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_stratified_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -252,12 +242,12 @@ INNER JOIN genefamilies_cpm_unstratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_cpm_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_cpm_unstratified_joined ORDER BY gene_family ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_cpm_unstratified_gene_family.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_cpm_unstratified_gene_family.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -314,12 +304,12 @@ INNER JOIN genefamilies_relab_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_relab_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_relab_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -376,12 +366,12 @@ INNER JOIN genefamilies_relab_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_relab_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_relab_stratified_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_stratified_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_stratified_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -435,12 +425,12 @@ INNER JOIN genefamilies_relab_unstratified_headers AS h ON s.file_id = h.file_id
 
 COPY
     (SELECT * FROM genefamilies_relab_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_relab_unstratified_joined ORDER BY gene_family ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_relab_unstratified_gene_family.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_relab_unstratified_gene_family.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -497,12 +487,12 @@ INNER JOIN genefamilies_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_stratified_joined ORDER BY gene_family_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_stratified_gene_family_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_stratified_gene_family_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -556,12 +546,12 @@ INNER JOIN genefamilies_unstratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM genefamilies_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM genefamilies_unstratified_joined ORDER BY gene_family ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/genefamilies_unstratified_gene_family.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/genefamilies_unstratified_gene_family.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -618,12 +608,12 @@ INNER JOIN pathabundance_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -680,12 +670,12 @@ INNER JOIN pathabundance_cpm_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_cpm_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_cpm_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -742,12 +732,12 @@ INNER JOIN pathabundance_relab_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_relab_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_relab_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -804,12 +794,12 @@ INNER JOIN pathabundance_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_stratified_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_stratified_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_stratified_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -863,12 +853,12 @@ INNER JOIN pathabundance_unstratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_unstratified_joined ORDER BY pathway ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_unstratified_pathway.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_unstratified_pathway.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -925,12 +915,12 @@ INNER JOIN pathabundance_cpm_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_cpm_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_cpm_stratified_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_stratified_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_stratified_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -987,12 +977,12 @@ INNER JOIN pathabundance_relab_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_relab_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_relab_stratified_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_stratified_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_stratified_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -1046,12 +1036,12 @@ INNER JOIN pathabundance_cpm_unstratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathabundance_cpm_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_cpm_unstratified_joined ORDER BY pathway ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_cpm_unstratified_pathway.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_cpm_unstratified_pathway.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -1105,12 +1095,12 @@ INNER JOIN pathabundance_relab_unstratified_headers AS h ON s.file_id = h.file_i
 
 COPY
     (SELECT * FROM pathabundance_relab_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathabundance_relab_unstratified_joined ORDER BY pathway ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathabundance_relab_unstratified_pathway.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathabundance_relab_unstratified_pathway.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -1167,12 +1157,12 @@ INNER JOIN pathcoverage_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathcoverage_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathcoverage_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -1229,12 +1219,12 @@ INNER JOIN pathcoverage_stratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathcoverage_stratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_stratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_stratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathcoverage_stratified_joined ORDER BY pathway_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_stratified_pathway_species.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_stratified_pathway_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -1288,12 +1278,12 @@ INNER JOIN pathcoverage_unstratified_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM pathcoverage_unstratified_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_unstratified_uuid.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_unstratified_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM pathcoverage_unstratified_joined ORDER BY pathway ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/pathcoverage_unstratified_pathway.parquet'
+TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/pathcoverage_unstratified_pathway.parquet'
     (format parquet, compression 'zstd');
 
 
