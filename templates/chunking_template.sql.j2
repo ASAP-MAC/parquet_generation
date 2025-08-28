@@ -1,0 +1,95 @@
+-- Usage: duckdb goose.duckdb < {{ outfile }}.sql
+install httpfs;
+load httpfs;
+CREATE SECRET metagenomics_mac (
+    TYPE gcs,
+    KEY_ID '{{ key_id }}',
+    SECRET '{{ secret }}'
+);
+
+PRAGMA temp_directory='{{ tmp_dir }}';
+
+-- {{ data_type.description }}
+
+-- Loop over chunks:
+{% for chunk in data_type.uuid_chunks %}
+
+SET VARIABLE sample_ids = list_value(
+        {% for id in chunk %}
+        '{{ id }}'{% if not loop.last %},{{ "\n" }}{% else %});{{ "\n" }}{% endif %}
+        {% endfor %}
+SET VARIABLE sample_prefixes = list_transform(getvariable('sample_ids'), lambda x : concat('{{ base_prefix }}', x));
+
+SET VARIABLE {{ data_type.table_name }}_columns =
+    struct_pack(
+        {% for name, dtype in data_type.columns.items() %}
+        {{ name }} := '{{ dtype }}'{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+        {% endfor %}
+    );
+
+CREATE OR REPLACE TABLE {{ data_type.table_name }}_{{ loop.index }} AS SELECT * FROM read_csv(
+    list_transform(getvariable('sample_prefixes'), lambda x : concat(x, '{{ data_type.input_path_suffix }}')),
+    filename=True,
+    auto_detect=False,
+    columns=getvariable('{{ data_type.table_name }}_columns'),
+    delim='\t',
+    skip=0,
+    store_rejects=True,
+    rejects_scan='{{ data_type.table_name }}_{{ loop.index }}_scan',
+    rejects_table='{{ data_type.table_name }}_{{ loop.index }}_errors');
+
+CREATE OR REPLACE TABLE {{ data_type.table_name }}_{{ loop.index }}_headers AS
+WITH deduped_lines AS (
+    SELECT DISTINCT scan_id, file_id, line, csv_line
+    FROM {{ data_type.table_name }}_{{ loop.index }}_errors
+)
+SELECT
+    scan_id,
+    file_id,
+    string_agg(csv_line, '|' ORDER BY line) AS full_header,
+    struct_pack(
+        {% for name, index in data_type.header.items() %}
+        {{ name }} := split_part(full_header, '|', {{ index }}){% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+        {% endfor %}
+    ) AS nested_header
+FROM deduped_lines
+GROUP BY scan_id, file_id;
+
+CREATE OR REPLACE TABLE {{ data_type.table_name }}_{{ loop.index }}_joined AS SELECT
+    {% if data_type.columns_to_split %}
+    {% for colname, subcol in data_type.columns_to_split.items() %}
+    {% set delim = subcol.delimiter %}
+    {% for name, index in subcol.parts.items() %}
+    string_split_regex(t.{{ colname }}, '{{ delim }}')[{{ index }}] AS {{ name }},
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
+    t.* EXCLUDE (t.filename),
+    split_part(t.filename, '/', 6) AS uuid,
+    UNNEST(h.nested_header)
+FROM {{ data_type.table_name }}_{{ loop.index }} AS t
+INNER JOIN {{ data_type.table_name }}_{{ loop.index }}_scan AS s ON t.filename = s.file_path
+INNER JOIN {{ data_type.table_name }}_{{ loop.index }}_headers AS h ON s.file_id = h.file_id;
+
+DROP TABLE {{ data_type.table_name }}_{{ loop.index }};
+DROP TABLE {{ data_type.table_name }}_{{ loop.index }}_scan;
+DROP TABLE {{ data_type.table_name }}_{{ loop.index }}_errors;
+DROP TABLE {{ data_type.table_name }}_{{ loop.index }}_headers;
+{% endfor %}
+
+-- Combine all chunks for {{ data_type.table_name }}
+{% for chunk in data_type.uuid_chunks %}
+{% if loop.first %}
+CREATE TABLE {{ data_type.table_name }}_all AS
+{% else %}
+INSERT INTO {{ data_type.table_name }}_all
+{% endif %}
+SELECT * FROM {{ data_type.table_name }}_{{ loop.index }}_joined;
+{% endfor %}
+
+{% for colname in data_type.columns_to_sort %}
+COPY
+    (SELECT * FROM {{ data_type.table_name }}_all ORDER BY {{ colname }} ASC)
+TO '{{ outfile_prefix }}{{ data_type.table_name }}_{{ colname }}.parquet'
+    (format parquet, compression 'zstd');{{ "\n" }}
+{% endfor %}

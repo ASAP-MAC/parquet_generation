@@ -1,4 +1,4 @@
--- Usage: duckdb goose.duckdb < humann_all.sql
+-- Usage: duckdb goose.duckdb < full_humann.sql
 install httpfs;
 load httpfs;
 CREATE SECRET metagenomics_mac (
@@ -6,6 +6,8 @@ CREATE SECRET metagenomics_mac (
     KEY_ID 'KEY_ID',
     SECRET 'SECRET'
 );
+
+PRAGMA temp_directory='/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/tmp_duckdb';
 
 -- Wildcard mode: read all matching files
 SET VARIABLE test_prefixes = list_value('gs://metagenomics-mac/results/cMDv4/*');

@@ -2,6 +2,8 @@ genefamilies:
   table_name: genefamilies
   description: 'HUMAnN: genefamilies (out_genefamilies.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE
@@ -22,6 +24,8 @@ genefamilies_cpm:
   table_name: genefamilies_cpm
   description: 'HUMAnN: genefamilies_cpm (out_genefamilies_cpm.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_cpm.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE
@@ -42,6 +46,8 @@ genefamilies_cpm_stratified:
   table_name: genefamilies_cpm_stratified
   description: 'HUMAnN: genefamilies_cpm_stratified (out_genefamilies_cpm_stratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_cpm_stratified.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE
@@ -76,6 +82,8 @@ genefamilies_relab:
   table_name: genefamilies_relab
   description: 'HUMAnN: genefamilies_relab (out_genefamilies_relab.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_relab.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE
@@ -96,6 +104,8 @@ genefamilies_relab_stratified:
   table_name: genefamilies_relab_stratified
   description: 'HUMAnN: genefamilies_relab_stratified (out_genefamilies_relab_stratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_relab_stratified.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE
@@ -130,6 +140,8 @@ genefamilies_stratified:
   table_name: genefamilies_stratified
   description: 'HUMAnN: genefamilies_stratified (out_genefamilies_stratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_stratified.tsv.gz
+  chunk_samples: true
+  chunk_size: 750
   columns:
     gene_family: VARCHAR
     rpk_abundance: DOUBLE

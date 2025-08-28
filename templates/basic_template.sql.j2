@@ -1,0 +1,92 @@
+-- Usage: duckdb goose.duckdb < {{ outfile }}.sql
+install httpfs;
+load httpfs;
+CREATE SECRET metagenomics_mac (
+    TYPE gcs,
+    KEY_ID '{{ key_id }}',
+    SECRET '{{ secret }}'
+);
+
+PRAGMA temp_directory='{{ tmp_dir }}';
+
+{% if sample_ids == '*' %}
+-- Wildcard mode: read all matching files
+SET VARIABLE test_prefixes = list_value('{{ base_prefix }}*');
+{% else %}
+SET VARIABLE sample_ids = list_value(
+        {% for id in sample_ids %}
+        '{{ id }}'{% if not loop.last %},{{ "\n" }}{% else %});{{ "\n" }}{% endif %}
+        {% endfor %}
+SET VARIABLE test_prefixes = list_transform(getvariable('sample_ids'), lambda x : concat('{{ base_prefix }}', x));
+{% endif %}
+
+-- Loop over data types:
+
+{% for dt in data_types %}
+-- {{ dt.description }}
+
+SET VARIABLE {{ dt.table_name }}_columns =
+    struct_pack(
+        {% for name, dtype in dt.columns.items() %}
+        {{ name }} := '{{ dtype }}'{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+        {% endfor %}
+    );
+
+CREATE OR REPLACE TABLE {{ dt.table_name }} AS SELECT * FROM read_csv(
+    list_transform(getvariable('test_prefixes'), lambda x : concat(x, '{{ dt.input_path_suffix }}')),
+    filename=True,
+    auto_detect=False,
+    columns=getvariable('{{ dt.table_name }}_columns'),
+    delim='\t',
+    skip=0,
+    store_rejects=True,
+    rejects_scan='{{ dt.table_name }}_scan',
+    rejects_table='{{ dt.table_name }}_errors');
+
+CREATE OR REPLACE TABLE {{ dt.table_name }}_headers AS
+WITH deduped_lines AS (
+    SELECT DISTINCT scan_id, file_id, line, csv_line
+    FROM {{ dt.table_name }}_errors
+)
+SELECT
+    scan_id,
+    file_id,
+    string_agg(csv_line, '|' ORDER BY line) AS full_header,
+    struct_pack(
+        {% for name, index in dt.header.items() %}
+        {{ name }} := split_part(full_header, '|', {{ index }}){% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+        {% endfor %}
+    ) AS nested_header
+FROM deduped_lines
+GROUP BY scan_id, file_id;
+
+CREATE OR REPLACE TABLE {{ dt.table_name }}_joined AS SELECT
+    {% if dt.columns_to_split %}
+    {% for colname, subcol in dt.columns_to_split.items() %}
+    {% set delim = subcol.delimiter %}
+    {% for name, index in subcol.parts.items() %}
+    string_split_regex(t.{{ colname }}, '{{ delim }}')[{{ index }}] AS {{ name }},
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
+    t.* EXCLUDE (t.filename),
+    split_part(t.filename, '/', 6) AS uuid,
+    UNNEST(h.nested_header)
+FROM {{ dt.table_name }} AS t
+INNER JOIN {{ dt.table_name }}_scan AS s ON t.filename = s.file_path
+INNER JOIN {{ dt.table_name }}_headers AS h ON s.file_id = h.file_id;
+
+{% for colname in dt.columns_to_sort %}
+COPY
+    (SELECT * FROM {{ dt.table_name }}_joined ORDER BY {{ colname }} ASC)
+TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ colname }}.parquet'
+    (format parquet, compression 'zstd');{{ "\n" }}
+{% endfor %}
+
+DROP TABLE {{ dt.table_name }};
+DROP TABLE {{ dt.table_name }}_scan;
+DROP TABLE {{ dt.table_name }}_errors;
+DROP TABLE {{ dt.table_name }}_headers;
+DROP TABLE {{ dt.table_name }}_joined;
+
+{% endfor %}
