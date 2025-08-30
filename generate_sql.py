@@ -48,8 +48,34 @@ basic_template = env.get_template("basic_template.sql.j2")
 chunking_template = env.get_template("chunking_template.sql.j2")
 
 # Pull individual configs for requested data types
-requested_types = "*"
-#requested_types = "genefamilies"
+#requested_types = "*"
+requested_types = [
+#    "relative_abundance",
+#    "viral_clusters",
+#    "marker_abundance",
+#    "marker_presence",
+    "genefamilies",
+    "genefamilies_cpm",
+    "genefamilies_cpm_stratified",
+#    "genefamilies_cpm_unstratified",
+    "genefamilies_relab",
+    "genefamilies_relab_stratified",
+#    "genefamilies_relab_unstratified",
+    "genefamilies_stratified",
+#    "genefamilies_unstratified",
+#    "pathabundance",
+#    "pathabundance_cpm",
+#    "pathabundance_relab",
+#    "pathabundance_stratified",
+#    "pathabundance_unstratified",
+#    "pathabundance_cpm_stratified",
+#    "pathabundance_relab_stratified",
+#    "pathabundance_cpm_unstratified",
+#    "pathabundance_relab_unstratified",
+#    "pathcoverage",
+#    "pathcoverage_stratified",
+#    "pathcoverage_unstratified"
+]
 
 if isinstance(requested_types, str):
     requested_types = [requested_types]
@@ -65,6 +91,8 @@ key_id = "KEY_ID"
 secret = "SECRET"
 base_prefix = "gs://metagenomics-mac/results/cMDv4/"
 tmp_dir = "/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/tmp_duckdb"
+mem_limit = "200GB"
+threads = "6"
 gbucket = "metagenomics-mac"
 bucket_prefix = "results/cMDv4/"
 outfile_prefix = "/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/"
@@ -116,6 +144,8 @@ if chunked_types:
             base_prefix = base_prefix,
             outfile_prefix = outfile_prefix,
             tmp_dir = tmp_dir,
+            mem_limit = mem_limit,
+            threads = threads,
             data_type = dt
         )
         os.makedirs(f"output/{outfile}_chunked", exist_ok=True)
@@ -133,7 +163,9 @@ if non_chunked_types:
             sample_ids = sample_ids,
             outfile_prefix = outfile_prefix,
             tmp_dir = tmp_dir,
-            data_types = data_types
+            mem_limit = mem_limit,
+            threads = threads,
+            data_types = non_chunked_types
         )
     with open(f"output/{outfile}.sql", "w") as f:
         f.write(sql_script)
