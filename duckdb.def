@@ -1,0 +1,19 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%post
+    apt update && apt install -y \
+        wget unzip gcc g++ make cmake \
+        libreadline-dev python3 python3-pip git curl
+
+    mkdir -p /opt/duckdb
+    curl -L https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip -o duckdb.zip
+    unzip duckdb.zip -d /opt/duckdb
+    chmod +x /opt/duckdb/duckdb
+    ln -s /opt/duckdb/duckdb /usr/local/bin/duckdb
+
+%environment
+    export PATH=/usr/local/bin:$PATH
+
+%runscript
+    duckdb
