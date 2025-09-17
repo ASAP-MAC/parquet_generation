@@ -1,0 +1,69 @@
+genefamilies:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+genefamilies_cpm:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+genefamilies_cpm_stratified:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+genefamilies_relab:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+genefamilies_relab_stratified:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+genefamilies_stratified:
+  base_sort: uuid
+  new_sorts:
+    - gene_family_uniref
+
+pathabundance:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathabundance_cpm:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathabundance_relab:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathabundance_stratified:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathabundance_cpm_stratified:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathabundance_relab_stratified:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathcoverage:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref
+
+pathcoverage_stratified:
+  base_sort: uuid
+  new_sorts:
+    - pathway_uniref

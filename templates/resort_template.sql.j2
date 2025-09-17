@@ -1,0 +1,16 @@
+-- Usage: duckdb goose.duckdb < {{ outfile }}.sql
+
+PRAGMA temp_directory='{{ tmp_dir }}';
+PRAGMA memory_limit='{{ mem_limit }}';
+
+-- Loop over data types:
+{% for dt in data_types %}
+{% for colname in dt.new_sorts %}
+
+-- {{ dt.name }}: {{ colname }}
+COPY
+    (SELECT * FROM '{{ infile_prefix }}{{ dt.name }}_{{ dt.base_sort }}.parquet'
+    ORDER BY {{ colname }} ASC)
+TO '{{ outfile_prefix }}{{ dt.name }}_{{ colname }}.parquet';
+{% endfor %}
+{% endfor %}
