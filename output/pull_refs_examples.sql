@@ -53,6 +53,7 @@ COPY
         string_split_regex(clade_name, '[|]')[6] AS clade_name_genus,
         string_split_regex(clade_name, '[|]')[7] AS clade_name_species,
         string_split_regex(clade_name, '[|]')[8] AS clade_name_terminal,
+        NCBI_tax_id,
         string_split_regex(NCBI_tax_id, '[|]')[1] AS NCBI_tax_id_kingdom,
         string_split_regex(NCBI_tax_id, '[|]')[2] AS NCBI_tax_id_phylum,
         string_split_regex(NCBI_tax_id, '[|]')[3] AS NCBI_tax_id_class,
