@@ -1,5 +1,5 @@
 # Usage:
-# python3 generate_sql.py generated_script_name
+# python3 generate_sql.py generated_script_name uuid_file_name
 
 import yaml
 import sys
@@ -11,6 +11,9 @@ from google.cloud import storage
 
 # Set generated file name
 outfile = sys.argv[1] if len(sys.argv) > 1 else "generated_script"
+
+# Get UUID file name
+idfile = sys.argv[2] if len(sys.argv) > 2 else None
 
 # Function to get all available UUIDS
 def get_uuids_from_data_type(suffix, bucket_name="metagenomics-mac", prefix="results/cMDv4/"):
@@ -36,7 +39,7 @@ def chunk_list(lst, chunk_size):
     return [lst[i:i + size_per_chunk] for i in range(0, n, size_per_chunk)]
 
 # Load config
-with open("config/humann_configs.yaml") as f:
+with open("config/metaphlan_configs.yaml") as f:
     configs = yaml.safe_load(f)
 
 env = Environment(
@@ -48,20 +51,20 @@ basic_template = env.get_template("basic_template.sql.j2")
 chunking_template = env.get_template("chunking_template.sql.j2")
 
 # Pull individual configs for requested data types
-#requested_types = "*"
-requested_types = [
+requested_types = "*"
+#requested_types = [
 #    "relative_abundance",
 #    "viral_clusters",
 #    "marker_abundance",
 #    "marker_presence",
-    "genefamilies",
-    "genefamilies_cpm",
-    "genefamilies_cpm_stratified",
+#    "genefamilies",
+#    "genefamilies_cpm",
+#    "genefamilies_cpm_stratified",
 #    "genefamilies_cpm_unstratified",
-    "genefamilies_relab",
-    "genefamilies_relab_stratified",
+#    "genefamilies_relab",
+#    "genefamilies_relab_stratified",
 #    "genefamilies_relab_unstratified",
-    "genefamilies_stratified",
+#    "genefamilies_stratified",
 #    "genefamilies_unstratified",
 #    "pathabundance",
 #    "pathabundance_cpm",
@@ -75,7 +78,7 @@ requested_types = [
 #    "pathcoverage",
 #    "pathcoverage_stratified",
 #    "pathcoverage_unstratified"
-]
+#]
 
 if isinstance(requested_types, str):
     requested_types = [requested_types]
@@ -95,7 +98,7 @@ mem_limit = "200GB"
 threads = "6"
 gbucket = "metagenomics-mac"
 bucket_prefix = "results/cMDv4/"
-outfile_prefix = "/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac/"
+outfile_prefix = "/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/new_samples/"
 #test_ids = [
 #    "d9cc81ea-c39e-46a6-a6f9-eb5584b87706",
 #    "38d449c8-1462-4d30-ba87-d032d95942ce",
@@ -108,11 +111,18 @@ outfile_prefix = "/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/pa
 #    "4985aa08-6138-4146-8ae3-952716575395",
 #    "fb7e8210-002a-4554-b265-873c4003e25f"
 #]
-sample_ids = "*"
 
-# Split into chunked vs non-chunked
-chunked_types = [dt for dt in data_types if dt.get("chunk_samples") and sample_ids == "*"]
-non_chunked_types = [dt for dt in data_types if not dt.get("chunk_samples")]
+# Split into chunked and non-chunked types
+if idfile is not None:
+    with open(idfile, 'r') as file:
+        lines = file.readlines()
+        sample_ids = [line.strip() for line in lines]
+    chunked_types = []
+    non_chunked_types = data_types
+else:
+    sample_ids = "*"
+    chunked_types = [dt for dt in data_types if dt.get("chunk_samples")]
+    non_chunked_types = [dt for dt in data_types if not dt.get("chunk_samples")]
 
 # Render single script for each chunked type
 if chunked_types:
@@ -152,7 +162,6 @@ if chunked_types:
         with open(f"output/{outfile}_chunked/{dt['name']}_chunked.sql", "w") as f:
             f.write(sql_script)
 
-
 # Render single script with all non-chunked types
 if non_chunked_types:
     sql_script = basic_template.render(
@@ -165,7 +174,8 @@ if non_chunked_types:
             tmp_dir = tmp_dir,
             mem_limit = mem_limit,
             threads = threads,
-            data_types = non_chunked_types
+            data_types = non_chunked_types,
+            sf_files_exist = False
         )
     with open(f"output/{outfile}.sql", "w") as f:
         f.write(sql_script)

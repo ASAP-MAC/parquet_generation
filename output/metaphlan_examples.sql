@@ -1,4 +1,4 @@
--- Usage: duckdb goose.duckdb < metaphlan_examples.sql
+-- Usage: duckdb goose.duckdb < new_metaphlan_examples.sql
 install httpfs;
 load httpfs;
 CREATE SECRET metagenomics_mac (
@@ -31,6 +31,7 @@ SET VARIABLE relative_abundance_columns =
         relative_abundance := 'DOUBLE',
         additional_species := 'VARCHAR'
     );
+
 
 CREATE OR REPLACE TABLE relative_abundance AS SELECT * FROM read_csv(
     list_transform(getvariable('test_prefixes'), lambda x : concat(x, '/metaphlan_lists/metaphlan_unknown_list.tsv.gz')),
@@ -86,14 +87,76 @@ FROM relative_abundance AS t
 INNER JOIN relative_abundance_scan AS s ON t.filename = s.file_path
 INNER JOIN relative_abundance_headers AS h ON s.file_id = h.file_id;
 
+CREATE OR REPLACE TABLE relative_abundance_data AS SELECT
+    string_split_regex(clade_name, '[|]')[1] AS clade_name_kingdom,
+    string_split_regex(clade_name, '[|]')[2] AS clade_name_phylum,
+    string_split_regex(clade_name, '[|]')[3] AS clade_name_class,
+    string_split_regex(clade_name, '[|]')[4] AS clade_name_order,
+    string_split_regex(clade_name, '[|]')[5] AS clade_name_family,
+    string_split_regex(clade_name, '[|]')[6] AS clade_name_genus,
+    string_split_regex(clade_name, '[|]')[7] AS clade_name_species,
+    string_split_regex(clade_name, '[|]')[8] AS clade_name_terminal,
+    string_split_regex(NCBI_tax_id, '[|]')[1] AS NCBI_tax_id_kingdom,
+    string_split_regex(NCBI_tax_id, '[|]')[2] AS NCBI_tax_id_phylum,
+    string_split_regex(NCBI_tax_id, '[|]')[3] AS NCBI_tax_id_class,
+    string_split_regex(NCBI_tax_id, '[|]')[4] AS NCBI_tax_id_order,
+    string_split_regex(NCBI_tax_id, '[|]')[5] AS NCBI_tax_id_family,
+    string_split_regex(NCBI_tax_id, '[|]')[6] AS NCBI_tax_id_genus,
+    string_split_regex(NCBI_tax_id, '[|]')[7] AS NCBI_tax_id_species,
+    string_split_regex(NCBI_tax_id, '[|]')[8] AS NCBI_tax_id_terminal,
+    * EXCLUDE (filename),
+    split_part(filename, '/', 6) AS uuid
+FROM relative_abundance;
+
+CREATE OR REPLACE TABLE relative_abundance_final_headers AS SELECT
+    UNNEST(h.nested_header),
+    split_part(s.file_path, '/', 6) AS uuid
+FROM relative_abundance_scan AS s
+INNER JOIN relative_abundance_headers AS h ON s.file_id = h.file_id;
+
+UPDATE relative_abundance_joined
+SET
+    reads_processed = regexp_extract(reads_processed, '\d+');
+
+ALTER TABLE relative_abundance_joined
+ALTER COLUMN reads_processed TYPE INTEGER;
+
+CREATE OR REPLACE TABLE relative_abundance_samples AS SELECT DISTINCT
+    uuid,
+    reads_processed
+FROM relative_abundance_joined
+ORDER BY uuid ASC;
+
+CREATE OR REPLACE TABLE test_empty(
+        sample_key INT PRIMARY KEY,
+        uuid VARCHAR,
+        reads_processed INT
+);
+
+CREATE OR REPLACE TABLE relative_abundance_sample_data AS SELECT *
+FROM 'relative_abundance_sample_data.parquet';
+
+ALTER TABLE relative_abundance_sample_data
+ADD PRIMARY KEY (sample_key);
+
+INSERT INTO relative_abundance_sample_data (uuid, reads_processed)
+SELECT uuid, reads_processed
+FROM relative_abundance_joined;
+
+
+COPY
+    (SELECT * FROM test_empty)
+TO 'relative_abundance_sample_data.parquet'
+    (format parquet, compression 'zstd');
+
 COPY
     (SELECT * FROM relative_abundance_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/relative_abundance_uuid.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/relative_abundance_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM relative_abundance_joined ORDER BY clade_name_species ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/relative_abundance_clade_name_species.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/relative_abundance_clade_name_species.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -157,12 +220,12 @@ INNER JOIN viral_clusters_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM viral_clusters_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/viral_clusters_uuid.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/viral_clusters_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM viral_clusters_joined ORDER BY genome_name ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/viral_clusters_genome_name.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/viral_clusters_genome_name.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -219,12 +282,12 @@ INNER JOIN marker_abundance_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM marker_abundance_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/marker_abundance_uuid.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/marker_abundance_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM marker_abundance_joined ORDER BY uniref ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/marker_abundance_uniref.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/marker_abundance_uniref.parquet'
     (format parquet, compression 'zstd');
 
 
@@ -281,12 +344,12 @@ INNER JOIN marker_presence_headers AS h ON s.file_id = h.file_id;
 
 COPY
     (SELECT * FROM marker_presence_joined ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/marker_presence_uuid.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/marker_presence_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM marker_presence_joined ORDER BY uniref ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/metagenomics_mac_examples/marker_presence_uniref.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/examples/marker_presence_uniref.parquet'
     (format parquet, compression 'zstd');
 
 

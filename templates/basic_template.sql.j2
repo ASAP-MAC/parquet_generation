@@ -8,6 +8,7 @@ CREATE SECRET metagenomics_mac (
 );
 
 PRAGMA temp_directory='{{ tmp_dir }}';
+PRAGMA memory_limit='{{ mem_limit }}';
 
 {% if sample_ids == '*' %}
 -- Wildcard mode: read all matching files
@@ -27,7 +28,7 @@ SET VARIABLE test_prefixes = list_transform(getvariable('sample_ids'), lambda x 
 
 SET VARIABLE {{ dt.table_name }}_columns =
     struct_pack(
-        {% for name, dtype in dt.columns.items() %}
+        {% for name, dtype in dt.input_columns.items() %}
         {{ name }} := '{{ dtype }}'{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
         {% endfor %}
     );
@@ -53,7 +54,7 @@ SELECT
     file_id,
     string_agg(csv_line, '|' ORDER BY line) AS full_header,
     struct_pack(
-        {% for name, index in dt.header.items() %}
+        {% for name, index in dt.input_header.items() %}
         {{ name }} := split_part(full_header, '|', {{ index }}){% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
         {% endfor %}
     ) AS nested_header
@@ -76,17 +77,49 @@ FROM {{ dt.table_name }} AS t
 INNER JOIN {{ dt.table_name }}_scan AS s ON t.filename = s.file_path
 INNER JOIN {{ dt.table_name }}_headers AS h ON s.file_id = h.file_id;
 
+{% if dt.columns_to_parse %}
+{% if dt.columns_to_parse.values() | selectattr('regex') | list | length > 0 %}
+UPDATE {{ dt.table_name }}_joined
+SET
+{% for name, attrs in dt.columns_to_parse.items() if 'regex' in attrs %}
+    {{ name }} = regexp_extract({{ name }}, '{{ attrs.regex }}'){% if not loop.last %},{{ "\n" }}{% else %};{{ "\n\n" }}{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if dt.columns_to_parse %}
+{% for name, attrs in dt.columns_to_parse.items() if 'new_type' in attrs %}
+ALTER TABLE {{ dt.table_name }}_joined ALTER COLUMN {{ name }} TYPE {{ attrs.new_type }};{% if not loop.last %}{% else %}{{ "\n\n" }}{% endif %}
+{% endfor %}
+{% endif %}
+
+CREATE OR REPLACE TABLE {{ dt.table_name }}_samples AS SELECT DISTINCT
+    {% for colname in dt.sample_columns %}
+    {{ colname }}{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+    {% endfor %}
+FROM {{ dt.table_name }}_joined
+ORDER BY {{ dt.sample_sort }};
+
+CREATE OR REPLACE TABLE {{ dt.table_name }}_features AS SELECT DISTINCT
+    {% for colname in dt.feature_columns %}
+    {{ colname }}{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+    {% endfor %}
+FROM {{ dt.table_name }}_joined
+ORDER BY {{ dt.feature_sort }};
+
+CREATE OR REPLACE TABLE {{ dt.table_name }}_data AS SELECT
+    {% for colname in dt.data_columns %}
+    {{ colname }}{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
+    {% endfor %}
+
 {% for colname in dt.columns_to_sort %}
 COPY
     (SELECT * FROM {{ dt.table_name }}_joined ORDER BY {{ colname }} ASC)
 TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ colname }}.parquet'
     (format parquet, compression 'zstd');{{ "\n" }}
 {% endfor %}
-
 DROP TABLE {{ dt.table_name }};
 DROP TABLE {{ dt.table_name }}_scan;
 DROP TABLE {{ dt.table_name }}_errors;
 DROP TABLE {{ dt.table_name }}_headers;
 DROP TABLE {{ dt.table_name }}_joined;
-
 {% endfor %}

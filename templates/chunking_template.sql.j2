@@ -8,6 +8,7 @@ CREATE SECRET metagenomics_mac (
 );
 
 PRAGMA temp_directory='{{ tmp_dir }}';
+PRAGMA memory_limit='{{ mem_limit }}';
 
 -- {{ data_type.description }}
 
@@ -93,3 +94,8 @@ COPY
 TO '{{ outfile_prefix }}{{ data_type.table_name }}_{{ colname }}.parquet'
     (format parquet, compression 'zstd');{{ "\n" }}
 {% endfor %}
+
+{% for chunk in data_type.uuid_chunks %}
+DROP TABLE {{ data_type.table_name }}_{{ loop.index }}_joined;
+{% endfor %}
+DROP TABLE {{ data_type.table_name }}_all;

@@ -2,15 +2,15 @@ relative_abundance:
   table_name: relative_abundance
   description: 'MetaPhlAn: relative_abundance (metaphlan_unknown_list.tsv.gz)'
   input_path_suffix: /metaphlan_lists/metaphlan_unknown_list.tsv.gz
-  columns:
+  input_columns:
     clade_name: VARCHAR
     NCBI_tax_id: VARCHAR
     relative_abundance: DOUBLE
     additional_species: VARCHAR
-  header:
-    db_version: 1
+  input_header:
+    chocophlan_version: 1
     command: 2
-    reads_processed: 3
+    number_reads: 3
     metaphlan_header: 4
     original_columns: 5
   columns_to_split:
@@ -36,6 +36,58 @@ relative_abundance:
         NCBI_tax_id_genus: 6
         NCBI_tax_id_species: 7
         NCBI_tax_id_terminal: 8
+  columns_to_parse:
+    chocophlan_version:
+      regex: '[^#]+'
+    command:
+      regex: '[^#]+'
+    number_reads:
+      regex: '\d+'
+      new_type: INTEGER
+    metaphlan_header:
+      regex: '[^#]+'
+    original_columns:
+      regex: '[^#]+'
+  sample_columns:
+    - uuid
+    - chocophlan_version
+    - command
+    - number_reads
+    - metaphlan_header
+    - original_columns
+  sample_sort: uuid
+  sample_key: uuid
+  feature_columns:
+    - clade_name
+    - clade_name_kingdom
+    - clade_name_phylum
+    - clade_name_class
+    - clade_name_order
+    - clade_name_family
+    - clade_name_genus
+    - clade_name_species
+    - clade_name_terminal
+    - NCBI_tax_id
+    - NCBI_tax_id_kingdom
+    - NCBI_tax_id_phylum
+    - NCBI_tax_id_class
+    - NCBI_tax_id_order
+    - NCBI_tax_id_family
+    - NCBI_tax_id_genus
+    - NCBI_tax_id_species
+    - NCBI_tax_id_terminal
+    - additional_species
+  feature_sort: clade_name
+  feature_hash:
+    feature_key:
+      - clade_name
+      - NCBI_tax_id
+      - additional_species
+  feature_key: feature_key
+  data_columns:
+    - relative_abundance
+
+temporary_holding:
   columns_to_sort:
     - uuid
     - clade_name_species
@@ -55,11 +107,20 @@ viral_clusters:
     first_genome_in_cluster: VARCHAR
     other_genomes: VARCHAR
   header:
-    db_version: 1
+    chocophlan_version: 1
     command: 2
     metaphlan_header: 3
     original_columns: 4
   columns_to_split:
+  columns_to_parse:
+  chocophlan_version:
+    regex: '[^#]+'
+  command:
+    regex: '[^#]+'
+  metaphlan_header:
+    regex: '[^#]+'
+  original_columns:
+    regex: '[^#]+'
   columns_to_sort:
     - uuid
     - genome_name
@@ -72,11 +133,21 @@ marker_abundance:
     uniref: VARCHAR
     abundance: DOUBLE
   header:
-    db_version: 1
+    chocophlan_version: 1
     command: 2
-    reads_processed: 3
+    number_reads: 3
     metaphlan_header: 4
   columns_to_split:
+  columns_to_parse:
+    chocophlan_version:
+      regex: '[^#]+'
+    command:
+      regex: '[^#]+'
+    number_reads:
+      regex: '\d+'
+      new_type: INTEGER
+    metaphlan_header:
+      regex: '[^#]+'
   columns_to_sort:
     - uuid
     - uniref
@@ -89,11 +160,21 @@ marker_presence:
     uniref: VARCHAR
     presence: INTEGER
   header:
-    db_version: 1
+    chocophlan_version: 1
     command: 2
-    reads_processed: 3
+    number_reads: 3
     metaphlan_header: 4
   columns_to_split:
+  columns_to_parse:
+    chocophlan_version:
+      regex: '[^#]+'
+    command:
+      regex: '[^#]+'
+    number_reads:
+      regex: '\d+'
+      new_type: INTEGER
+    metaphlan_header:
+      regex: '[^#]+'
   columns_to_sort:
     - uuid
     - uniref

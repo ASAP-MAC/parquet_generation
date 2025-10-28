@@ -16,9 +16,12 @@ genefamilies:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_cpm:
   table_name: genefamilies_cpm
@@ -38,9 +41,12 @@ genefamilies_cpm:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_cpm_stratified:
   table_name: genefamilies_cpm_stratified
@@ -60,23 +66,29 @@ genefamilies_cpm_stratified:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_cpm_unstratified:
   table_name: genefamilies_cpm_unstratified
   description: 'HUMAnN: genefamilies_cpm_unstratified (out_genefamilies_cpm_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_cpm_unstratified.tsv.gz
   columns:
-    gene_family: VARCHAR
+    gene_family_uniref: VARCHAR
     rpk_abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family
+    - gene_family_uniref
 
 genefamilies_relab:
   table_name: genefamilies_relab
@@ -96,9 +108,12 @@ genefamilies_relab:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_relab_stratified:
   table_name: genefamilies_relab_stratified
@@ -118,23 +133,29 @@ genefamilies_relab_stratified:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_relab_unstratified:
   table_name: genefamilies_relab_unstratified
   description: 'HUMAnN: genefamilies_relab_unstratified (out_genefamilies_relab_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_relab_unstratified.tsv.gz
   columns:
-    gene_family: VARCHAR
+    gene_family_uniref: VARCHAR
     rpk_abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family
+    - gene_family_uniref
 
 genefamilies_stratified:
   table_name: genefamilies_stratified
@@ -154,23 +175,29 @@ genefamilies_stratified:
         gene_family_uniref: 1
         gene_family_genus: 2
         gene_family_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family_species
+    - gene_family_uniref
 
 genefamilies_unstratified:
   table_name: genefamilies_unstratified
   description: 'HUMAnN: genefamilies_unstratified (out_genefamilies_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_genefamilies_unstratified.tsv.gz
   columns:
-    gene_family: VARCHAR
+    gene_family_uniref: VARCHAR
     rpk_abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - gene_family
+    - gene_family_uniref
 
 pathabundance:
   table_name: pathabundance
@@ -188,9 +215,12 @@ pathabundance:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_cpm:
   table_name: pathabundance_cpm
@@ -208,9 +238,12 @@ pathabundance_cpm:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_relab:
   table_name: pathabundance_relab
@@ -228,9 +261,12 @@ pathabundance_relab:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_stratified:
   table_name: pathabundance_stratified
@@ -248,23 +284,29 @@ pathabundance_stratified:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_unstratified:
   table_name: pathabundance_unstratified
   description: 'HUMAnN: pathabundance_unstratified (out_pathabundance_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_pathabundance_unstratified.tsv.gz
   columns:
-    pathway: VARCHAR
+    pathway_uniref: VARCHAR
     abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway
+    - pathway_uniref
 
 pathabundance_cpm_stratified:
   table_name: pathabundance_cpm_stratified
@@ -282,9 +324,12 @@ pathabundance_cpm_stratified:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_relab_stratified:
   table_name: pathabundance_relab_stratified
@@ -302,37 +347,46 @@ pathabundance_relab_stratified:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathabundance_cpm_unstratified:
   table_name: pathabundance_cpm_unstratified
   description: 'HUMAnN: pathabundance_cpm_unstratified (out_pathabundance_cpm_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_pathabundance_cpm_unstratified.tsv.gz
   columns:
-    pathway: VARCHAR
+    pathway_uniref: VARCHAR
     abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway
+    - pathway_uniref
 
 pathabundance_relab_unstratified:
   table_name: pathabundance_relab_unstratified
   description: 'HUMAnN: pathabundance_relab_unstratified (out_pathabundance_relab_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_pathabundance_relab_unstratified.tsv.gz
   columns:
-    pathway: VARCHAR
+    pathway_uniref: VARCHAR
     abundance: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway
+    - pathway_uniref
 
 pathcoverage:
   table_name: pathcoverage
@@ -350,9 +404,12 @@ pathcoverage:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathcoverage_stratified:
   table_name: pathcoverage_stratified
@@ -370,20 +427,26 @@ pathcoverage_stratified:
         pathway_uniref: 1
         pathway_genus: 2
         pathway_species: 3
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway_species
+    - pathway_uniref
 
 pathcoverage_unstratified:
   table_name: pathcoverage_unstratified
   description: 'HUMAnN: pathcoverage_unstratified (out_pathcoverage_unstratified.tsv.gz)'
   input_path_suffix: /humann/out_pathcoverage_unstratified.tsv.gz
   columns:
-    pathway: VARCHAR
+    pathway_uniref: VARCHAR
     coverage: DOUBLE
   header:
     humann_header: 1
   columns_to_split:
+  columns_to_parse:
+    humann_header:
+      regex: '(?<=# ).+'
   columns_to_sort:
     - uuid
-    - pathway
+    - pathway_uniref
