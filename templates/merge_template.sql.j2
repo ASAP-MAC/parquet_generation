@@ -1,0 +1,23 @@
+-- Usage: duckdb goose.duckdb < {{ outfile }}.sql
+
+PRAGMA temp_directory='{{ tmp_dir }}';
+PRAGMA memory_limit='{{ mem_limit }}';
+
+-- Loop over data types:
+{% for dt in data_types %}
+-- {{ dt.name }}
+
+CREATE OR REPLACE TABLE {{ dt.table_name }} AS
+SELECT * FROM '{{ infile_1_prefix }}{{ dt.name }}_{{ base_sort }}.parquet'
+UNION ALL
+SELECT * FROM '{{ infile_2_prefix }}{{ dt.name }}_{{ base_sort }}.parquet';
+
+{% for colname in dt.columns_to_sort %}
+COPY
+    (SELECT * FROM {{ dt.table_name }} ORDER BY {{ colname }} ASC)
+TO '{{ outfile_prefix }}{{ dt.name }}_{{ colname }}.parquet'
+    (format parquet, compression 'zstd');{{ "\n" }}
+{% endfor %}
+DROP TABLE {{ dt.table_name }};
+
+{% endfor %}
