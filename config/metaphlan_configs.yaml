@@ -58,6 +58,7 @@ relative_abundance:
   sample_sort: uuid
   sample_key: uuid
   feature_columns:
+    - feature_key
     - clade_name
     - clade_name_kingdom
     - clade_name_phylum

@@ -91,6 +91,17 @@ SET
 ALTER TABLE {{ dt.table_name }}_joined ALTER COLUMN {{ name }} TYPE {{ attrs.new_type }};{% if not loop.last %}{% else %}{{ "\n\n" }}{% endif %}
 {% endfor %}
 {% endif %}
+{% if dt.feature_hash %}
+UPDATE {{ dt.table_name }}_joined
+SET
+    {% for name, incols in dt.feature_hash.items() %}
+    {{ name }} = md5(concat(
+        {% for col in incols %}
+        {{ col }}{% if not loop.last %},{{ "\n" }}{% else %})){% endif %}
+        {% endfor %}{% if not loop.last %},{{ "\n" }}{% else %};{% endif %}
+    {% endfor %}
+{% endif %}
+
 
 CREATE OR REPLACE TABLE {{ dt.table_name }}_samples AS SELECT DISTINCT
     {% for colname in dt.sample_columns %}
@@ -107,19 +118,39 @@ FROM {{ dt.table_name }}_joined
 ORDER BY {{ dt.feature_sort }};
 
 CREATE OR REPLACE TABLE {{ dt.table_name }}_data AS SELECT
+    {{ dt.sample_key }},
+    {{ dt.feature_key }},
     {% for colname in dt.data_columns %}
     {{ colname }}{% if not loop.last %},{{ "\n" }}{% else %}{{ "\n" }}{% endif %}
     {% endfor %}
+FROM {{ dt.table_name }}_joined;
 
-{% for colname in dt.columns_to_sort %}
 COPY
-    (SELECT * FROM {{ dt.table_name }}_joined ORDER BY {{ colname }} ASC)
-TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ colname }}.parquet'
-    (format parquet, compression 'zstd');{{ "\n" }}
-{% endfor %}
+    (SELECT * FROM {{ dt.table_name }}_data ORDER BY {{ dt.sample_key }} ASC)
+TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ dt.sample_key }}.parquet'
+    (format parquet, compression 'zstd');
+
+COPY
+    (SELECT * FROM {{ dt.table_name }}_data ORDER BY {{ dt.feature_key }} ASC)
+TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ dt.feature_key }}.parquet'
+    (format parquet, compression 'zstd');
+
+COPY
+    (SELECT * FROM {{ dt.table_name }}_samples)
+TO '{{ outfile_prefix }}{{ dt.table_name }}_sample_ref.parquet'
+    (format parquet, compression 'zstd');
+
+COPY
+    (SELECT * FROM {{ dt.table_name }}_features)
+TO '{{ outfile_prefix }}{{ dt.table_name }}_feature_ref.parquet'
+    (format parquet, compression 'zstd');
+
 DROP TABLE {{ dt.table_name }};
 DROP TABLE {{ dt.table_name }}_scan;
 DROP TABLE {{ dt.table_name }}_errors;
 DROP TABLE {{ dt.table_name }}_headers;
 DROP TABLE {{ dt.table_name }}_joined;
+DROP TABLE {{ dt.table_name }}_data;
+DROP TABLE {{ dt.table_name }}_samples;
+DROP TABLE {{ dt.table_name }}_features;
 {% endfor %}
