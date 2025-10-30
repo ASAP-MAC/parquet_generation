@@ -10,8 +10,16 @@ CREATE SECRET metagenomics_mac (
 PRAGMA temp_directory='/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/tmp_duckdb';
 PRAGMA memory_limit='200GB';
 
--- Wildcard mode: read all matching files
-SET VARIABLE test_prefixes = list_value('gs://metagenomics-mac/results/cMDv4/*');
+SET VARIABLE sample_ids = list_value(
+        '5f8d4254-7653-46e3-814e-ed72cdfcb4d0',
+        '0a73759e-825f-4276-9348-66fb6a6e2f86',
+        '8793b1dc-3ba1-4591-82b8-4297adcfa1d7',
+        '6821bf5f-ad59-4204-9d78-9cf9cac97329',
+        '8eb9f7ae-88c2-44e5-967e-fe7f6090c7af',
+        'cc1f30a0-45d9-41b1-b592-7d0892919ee7',
+        '4985aa08-6138-4146-8ae3-952716575395',
+        'fb7e8210-002a-4554-b265-873c4003e25f');
+SET VARIABLE test_prefixes = list_transform(getvariable('sample_ids'), lambda x : concat('gs://metagenomics-mac/results/cMDv4/', x));
 
 -- Loop over data types:
 
@@ -89,6 +97,10 @@ SET
 
 ALTER TABLE relative_abundance_joined ALTER COLUMN number_reads TYPE INTEGER;
 
+ALTER TABLE relative_abundance_joined
+ADD
+    feature_key VARCHAR;
+
 UPDATE relative_abundance_joined
 SET
     feature_key = md5(concat(
@@ -138,22 +150,26 @@ FROM relative_abundance_joined;
 
 COPY
     (SELECT * FROM relative_abundance_data ORDER BY uuid ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/new_samples/relative_abundance_uuid.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_uuid.parquet'
     (format parquet, compression 'zstd');
 
 COPY
     (SELECT * FROM relative_abundance_data ORDER BY feature_key ASC)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/new_samples/relative_abundance_feature_key.parquet'
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_feature_key.parquet'
     (format parquet, compression 'zstd');
 
 COPY
-    (SELECT * FROM relative_abundance_samples)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/new_samples/relative_abundance_sample_ref.parquet'
+    (SELECT * FROM relative_abundance_samples
+    UNION
+    SELECT * FROM '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_sample_ref.parquet')
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_sample_ref.parquet'
     (format parquet, compression 'zstd');
 
 COPY
-    (SELECT * FROM relative_abundance_features)
-TO '/shares/CIBIO-Storage/CM/scratch/users/kaelyn.long/retrieve/parquets/new_samples/relative_abundance_feature_ref.parquet'
+    (SELECT * FROM relative_abundance_features
+    UNION
+    SELECT * FROM '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_feature_ref.parquet')
+TO '/home/kaelyn.long/cMD_pipeline/output_handling/parquets/relative_abundance_feature_ref.parquet'
     (format parquet, compression 'zstd');
 
 DROP TABLE relative_abundance;

@@ -92,6 +92,12 @@ ALTER TABLE {{ dt.table_name }}_joined ALTER COLUMN {{ name }} TYPE {{ attrs.new
 {% endfor %}
 {% endif %}
 {% if dt.feature_hash %}
+ALTER TABLE {{ dt.table_name }}_joined
+ADD
+    {% for name, incols in dt.feature_hash.items() %}
+    {{ name }} VARCHAR{{ ',' if not loop.last else ';' }}
+    {% endfor %}
+
 UPDATE {{ dt.table_name }}_joined
 SET
     {% for name, incols in dt.feature_hash.items() %}
@@ -136,12 +142,24 @@ TO '{{ outfile_prefix }}{{ dt.table_name }}_{{ dt.feature_key }}.parquet'
     (format parquet, compression 'zstd');
 
 COPY
+    {% if ref_files_exist %}
+    (SELECT * FROM {{ dt.table_name }}_samples
+    UNION
+    SELECT * FROM '{{ outfile_prefix }}{{ dt.table_name }}_sample_ref.parquet')
+    {% else %}
     (SELECT * FROM {{ dt.table_name }}_samples)
+    {% endif %}
 TO '{{ outfile_prefix }}{{ dt.table_name }}_sample_ref.parquet'
     (format parquet, compression 'zstd');
 
 COPY
+    {% if ref_files_exist %}
+    (SELECT * FROM {{ dt.table_name }}_features
+    UNION
+    SELECT * FROM '{{ outfile_prefix }}{{ dt.table_name }}_feature_ref.parquet')
+    {% else %}
     (SELECT * FROM {{ dt.table_name }}_features)
+    {% endif %}
 TO '{{ outfile_prefix }}{{ dt.table_name }}_feature_ref.parquet'
     (format parquet, compression 'zstd');
 
