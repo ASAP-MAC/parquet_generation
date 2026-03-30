@@ -2,6 +2,9 @@
 
 This repo contains files involved in the process of creating formatted parquet files from output stored in `gs://metagenomics-mac`. To briefly summarize, Python and Jinja2 are used to generate SQL code according to file information detailed in YAML configs. The resulting SQL code uses DuckDB with the `httpfs` extension to pull files from the Google Bucket and consolidate them into parquet files.
 
+This repo is part of the workflow that produces the data accessed by [parkinsonsMetagenomicData](https://github.com/ASAP-MAC/parkinsonsMetagenomicData).
+
+
 ## File Types
 
 Files in this repo fall into four types.
