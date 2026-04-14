@@ -1,9 +1,46 @@
 # Parquet Generation
 
-This repo contains files involved in the process of creating formatted parquet files from output stored in `gs://metagenomics-mac`. To briefly summarize, Python and Jinja2 are used to generate SQL code according to file information detailed in YAML configs. The resulting SQL code uses DuckDB with the `httpfs` extension to pull files from the Google Bucket and consolidate them into parquet files.
+This repo contains files involved in the process of creating formatted parquet files from output stored in `gs://metagenomics-mac`. To briefly summarize, Python and Jinja2 are used to generate SQL code according to file information detailed in YAML configs. The resulting SQL code uses DuckDB with the `httpfs` extension to pull files from the Google Bucket and consolidate them into parquet files. These parquet files are then hosted on Hugging Face in the [waldronlab/metagenomics_mac](https://huggingface.co/datasets/waldronlab/metagenomics_mac) and [waldronlab/metagenomics_mac_examples](https://huggingface.co/datasets/waldronlab/metagenomics_mac_examples/tree/main) repositories and easily accessible with the [parkinsonsMetagenomicData](https://github.com/ASAP-MAC/parkinsonsMetagenomicData) R package.
+
+## How To Use This Repo
+
+You will need:
+
+* Output files from the [curatedMetagenomicsNextflow pipeline](https://github.com/seandavi/curatedMetagenomicsNextflow), stored in a Google Bucket (by default, this repository uses `gs://metagenomics-mac`)
+* A list of sample IDs, unless you plan on pulling information for every sample run through the pipeline. These sample IDs will be the same as the sample IDs provided to the [curatedMetagenomicsNextflow pipeline](https://github.com/seandavi/curatedMetagenomicsNextflow)
+* Credentials for the Google Bucket: specifically, you need the "key_id" and "secret"
+* A local directory to store final parquet files
+* A DuckDB installation (`duckdb.def` can be used to build a DuckDB Singularity container if necessary)
+* Ideas for how you want to transform each type of output file into a parquet file
+
+Once you have all of these things, here is what you will need to customize within this repo.
+
+* YAML config files (`/config/`): Each output data type has its own entry within either `metaphlan_configs.yaml` or `humann_configs.yaml`. Make sure the input path suffixes are correct, and make any other desired adjustments.
+* `generate_sql.py`:
+    * `requested_types` (line 52): uncomment each data type you want to generate a SQL script for, or uncomment line 51 to generate scripts for all types.
+    * shared variables (line 89): set the credentials for your Google Bucket and the prefixes of the paths to reach the output files within the bucket. Also set `tmp_dir`, which specifies a location with lots of space for DuckDB to use, and `outfile_prefix`, which specifies the path to a directory where the final parquet files will be stored (prior to uploading to any hosting sites).
+    * `sample_ids` (line 111): paste your list of sample IDs here, or leave it as `"*"` to access all samples within the Google Bucket.
+
+Now you are ready to generate the SQL scripts. Run the command `python3 generate_sql.py generated_script_name`. This command is also listed in the "Usage" section at the top of `generate_sql.py`.
+The `generated_script_name` argument is simply what you would like your resulting SQL script to be called. For example, providing "all_metaphlan_types" would result in a SQL script called "all_metaphlan_types.sql".
+
+Once your SQL scripts have been generated, simply run them using your DuckDB installation. Each script generates with a "-- Usage:" line at the top.
+For example:
+
+`-- Usage: duckdb goose.duckdb < metaphlan_all.sql`
+
+In this line, "goose.duckdb" is the name of the database file you want DuckDB to work in. This file can be one that already exists, or it will generate it if it does not exist. This file can be discarded afterwards or retained to be reused for further scripts. By default, no tables are retained within the file.
+
+If you are using a Singularity container created by the included `duckdb.def` file, you can run this interactively within the container or use the following `singularity run` command. This can be useful for running the script as a batch job on an HPC. You will of course need to set the environment variables appropriately.
+
+`singularity run --bind /parquet_output_location:/parquet_output_location $SIF_PATH $DB_FILE < $SQL_SCRIPT`
+
+Running the SQL script will create your requested parquet files and save them to the location you specified. At this point, you are free to do what you like with them. For the parquet files available through the [parkinsonsMetagenomicData package](https://github.com/ASAP-MAC/parkinsonsMetagenomicData), they are pushed to a Hugging Face repository. If you are doing the same, here is the basic command used for your convenience:
+
+`hf upload waldronlab/metagenomics_mac --repo-type=dataset --include="relative_abundance*.parquet" --commit-message="adding new samples to relative abundance"`
 
 ## File Types
-
+ 
 Files in this repo fall into four types.
 
 * **YAML config**
